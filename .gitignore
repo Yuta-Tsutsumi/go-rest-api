@@ -1,0 +1,23 @@
+# 環境変数
+.env
+.env.*
+!.env.example
+
+# macOS
+.DS_Store
+
+# Goのビルド成果物
+/bin/
+/dist/
+*.exe
+*.test
+*.out
+
+# ログ
+*.log
+
+# PostgreSQLのローカルデータ
+/postgres_data/
+
+# IDE
+.idea/
