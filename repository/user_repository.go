@@ -11,6 +11,8 @@ package repository
 
 import "go-rest-api/model"
 
+// インターフェースとは、ある型がどのようなメソッドを持っている必要があるかを定義する仕組み
+// 「interface」はインターフェイズ型を定義するために使用
 // 「IUserRepository」の先頭の文字列が「I」から始まるのはインターフェイスを定義
 // 「GetUserByEmail」、「CreateUser」の2つのメソットを定義
 // 「user *model.User」（第一引数）でユーザーオブジェクトのポインタを受け取れるようにしている
