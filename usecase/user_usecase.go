@@ -56,5 +56,11 @@ func (uu *userUsecase) Login(user model.User) (string, error) {
 		"exp":     time.Now().Add(time.Hour * 12).Unix(),
 	})
 	tokenString, err := token.SignedString([]byte(os.Getenv("SECRET")))
-
+	if err != nil {
+			return "", err
+	}
+	return tokenString, nil
 }
+
+
+// return tokenString, nil
