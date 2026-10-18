@@ -1,3 +1,8 @@
+/*
+interfaceで要求されたメソッドを、
+名前・引数・戻り値の型まで一致させて用意することが「interfaceを実装する」という意味
+*/
+
 package usecase
 
 import (
@@ -10,14 +15,18 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-
+// 「controller」フォルダと連携をとるインターフェース（interface）を定義
+// その中で「ユーザー登録」と「ログイン」の処理ルールを定義。
+// 「SignUp」：ユーザーを新規登録するメソッド作成。「user」は引数名、「model.User」は引数（入力情報）、戻り値（出力値）は「model.UserResponse, error」の2つ
+// 「Login」：ユーザーをログインさせるメソッドを作成
 type IUserUsecase interface {
 	SignUp(user model.User) (model.UserResponse, error)
 	Login(user model.User) (string, error)
 }
 
-// 「userUsecase」のタイプを作成。
-// usecaseのソースコードはリポジトリのインターフェイルだけに依存させる
+// 「userUsecase」は新しく定義する型の名前。
+// 「struct」は複数のフィールドをまとめる構造体。「ur」はその構造体が持つフィールド名。
+// 「repository」はパッケージ名、「IUserRepository」は「repository」はパッケージ内の「user_repository.go」で定義された型の名前
 type userUsecase struct {
 	ur repository.IUserRepository
 }
@@ -61,6 +70,3 @@ func (uu *userUsecase) Login(user model.User) (string, error) {
 	}
 	return tokenString, nil
 }
-
-
-// return tokenString, nil

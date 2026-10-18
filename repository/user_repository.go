@@ -1,3 +1,12 @@
+/*
+主な役割 : DB内のデータの保存・取得・更新・削除
+考えること : DBにどうアクセスするか
+DBへの直接アクセスを行う
+ユーザー情報をDBに保存
+repositoryパッケージはメソッドの定義は行うが、「interface」では具体的な処理は書かない・
+具体的な処理は「usrcase」に任せる
+*/
+
 package repository
 
 import "go-rest-api/model"
