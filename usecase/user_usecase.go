@@ -61,6 +61,3 @@ func (uu *userUsecase) Login(user model.User) (string, error) {
 	}
 	return tokenString, nil
 }
-
-
-// return tokenString, nil
