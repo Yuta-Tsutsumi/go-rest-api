@@ -118,6 +118,15 @@ func (uu *userUsecase) SignUp(user model.User) (model.UserResponse, error) {
     return resUser, nil
 }
 
+/* ーーーーーーーーーーーーーーーーーーーーーーーーーー
+以下の処理は、大きく6段階に分けられる。
+1. DBから取得したユーザー情報を格納する構造体を生成する。
+2. Repositoryを呼び出し、メールアドレスでユーザーを検索する。
+3. 入力されたパスワードとDBのハッシュ値を照合する。
+4. 認証に成功したユーザーのJWTトークンを生成する。
+5. JWTに秘密鍵で署名する。
+6. 署名済みJWT文字列を呼び出し元に返す。
+ーーーーーーーーーーーーーーーーーーーーーーーーーー */
 
 func (uu *userUsecase) Login(user model.User) (string, error) {
 	storedUser := model.User{}
