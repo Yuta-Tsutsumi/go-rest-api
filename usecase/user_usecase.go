@@ -58,22 +58,59 @@ type userUsecase struct {
 		return &userUsecase{ur}
 	}
 
-	
+
+// 「SignUp」は、ユーザーの新規登録を行うUsecaseのメソッド。
+// 「uu」はレシーバー名、「*userUsecase」はレシーバーのデータ型（ポインタ型）。
+// 「user」は引数名、「model.User」は引数のデータ型。
+// 戻り値は「model.UserResponse」と「error」の2つ。
 func (uu *userUsecase) SignUp(user model.User) (model.UserResponse, error) {
-	hash, err := bcrypt.GenerateFromPassword([]byte(user.Password), 10)
-	if err != nil {
-		return model.UserResponse{}, err
-	}
-	newUser := model.User{Email: user.Email, Password: string(hash)}
-	if err := uu.ur.CreateUser(&newUser); err != nil {
-		return model.UserResponse{}, err
-	}
-	resUser := model.UserResponse {
-		ID: 		newUser.ID,
-		Email:  newUser.Email,
-	}
-	return resUser, nil
+
+    // 「bcrypt.GenerateFromPassword」でパスワードをハッシュ化する。
+    // 「user.Password」は入力されたパスワード。
+    // 「[]byte」でstring型のパスワードを[]byte型に変換する。
+		// 「10」はbcryptのコスト係数で、ハッシュ化処理の計算負荷を指定する。
+		// コスト係数を1増やすと計算量は約2倍になり、総当たり攻撃への耐性が高まる。
+		// ただし、コスト係数が高いほどユーザー登録・ログイン処理の時間も増える。
+		// 「hash」は生成されたハッシュ値、「err」はエラーを格納する変数。
+    hash, err := bcrypt.GenerateFromPassword([]byte(user.Password), 10)
+
+    // ハッシュ化でエラーが発生した場合は、終了する処理。
+    // 「model.UserResponse{}」は空のUserResponse構造体の値。
+    // 「err」は発生したエラーを返す。（つまり、エラーの場合はエラーのみを返す）
+    if err != nil {
+        return model.UserResponse{}, err
+    }
+
+    // DBに登録するためのmodel.User型の構造体の値を生成する。
+    // Emailには入力されたメールアドレスを設定する。
+    // Passwordにはハッシュ化したパスワードを設定する。
+    // 「string(hash)」で[]byte型をstring型に変換する。
+    newUser := model.User{
+        Email:    user.Email,
+        Password: string(hash),
+    }
+
+    // RepositoryのCreateUserメソッドを呼び出してDB登録を依頼する。
+    // 「uu.ur」はuserUsecaseが保持しているRepository。
+    // 「&newUser」で構造体へのポインタを渡す。
+    // DB登録に失敗した場合は空のUserResponseとエラーを返す。
+    if err := uu.ur.CreateUser(&newUser); err != nil {
+        return model.UserResponse{}, err
+    }
+
+    // Controllerに返すmodel.UserResponse型の構造体の値を生成する。
+    // DB登録後のIDとEmailを設定する。
+    // Passwordはレスポンスに含めない。
+    resUser := model.UserResponse{
+        ID:    newUser.ID,
+        Email: newUser.Email,
+    }
+
+    // 登録したユーザー情報を呼び出し元（user_repository.go）へ返す。
+    // 「nil」はエラーが発生していないことを表す。
+    return resUser, nil
 }
+
 
 func (uu *userUsecase) Login(user model.User) (string, error) {
 	storedUser := model.User{}
