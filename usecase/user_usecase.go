@@ -128,6 +128,10 @@ func (uu *userUsecase) SignUp(user model.User) (model.UserResponse, error) {
 6. 署名済みJWT文字列を呼び出し元に返す。
 ーーーーーーーーーーーーーーーーーーーーーーーーーー */
 
+// 「Login」は、ユーザーのログイン認証を行うUsecaseのメソッド。
+// 「uu」はレシーバー名、「*userUsecase」はレシーバーのデータ型（ポインタ型）。
+// 「user」は引数名、「model.User」は引数のデータ型。
+// 戻り値は「string」（JWTトークン）と「error」（エラー情報）の2つ。
 func (uu *userUsecase) Login(user model.User) (string, error) {
 	storedUser := model.User{}
 	if err := uu.ur.GetUserByEmail(&storedUser, user.Email); err != nil {
