@@ -37,52 +37,80 @@ type userUsecase struct {
 	ur repository.IUserRepository
 }
 
-// 「NewUserUsecase」は、userUsecaseを生成するコンストラクター関数。
-// 外部で用意したRepositoryの実装をUsecaseに渡す
-// 依存性の注入（DI：Dependency Injection）を行う。
-//
-// 「ur」は引数名。
-// 「repository.IUserRepository」は引数のデータ型（インターフェース型）。
-// 「IUserUsecase」は戻り値のデータ型（インターフェース型）。
-//
-// 「&userUsecase{ur}」で構造体を生成する。
-// 受け取ったRepositoryの値を、構造体のurフィールドに設定する。
-// 「&」で構造体へのポインタを取得する。
-// 生成した*userUsecaseをIUserUsecase型として呼び出し元へ返す。
-//
-// 構造体を生成する目的：
-// ① Repositoryの実装を保持するため。
-// ② SignUp・LoginからRepositoryのメソッドを呼び出すため。
-// ③ 生成したUsecaseをControllerなどに渡すため。
+	// 「repository」パッケージで定義されたインターフェースを通じて、Repositoryの実装を「usecase」パッケージに渡す依存性の注入（DI：Dependency Injection）を行う。
+	// 「NewUserUsecase」は、外部からRepositoryの実装を受け取り、userUsecase構造体を生成するコンストラクター関数。
+	// 「ur」は引数名、「repository.IUserRepository」は引数。引数のデータ型はインターフェース型。
+	// 「IUserUsecase」は戻り値のデータ型（インターフェース型）。
+	// 「&userUsecase{ur}」で構造体を生成し、受け取ったRepositoryをurフィールドに格納する。
+	// 「&」で構造体のポインタを取得し、「IUserUsecase」型として呼び出し元（user_repository.go）に返す。
+
+	/* 下記はurというフィールドを持つ構造体型を定義
+	type userUsecase struct {
+	ur repository.IUserRepository
+	}
+	return &userUsecase{ur}はその構造体を生成する処理
+ここで構造体を生成する目的は、主に次の3つです。
+1. Repositoryの実装を保持するため
+2. SignUp・LoginメソッドからRepositoryを利用できるようにするため
+3. 生成したUsecaseをControllerなどに渡すため
+	*/
 	func NewUserUsecase(ur repository.IUserRepository) IUserUsecase {
 		return &userUsecase{ur}
 	}
 
-//	func NewUserUsecase(ur repository.IUserRepository) IUserUsecase {
-//		return &userUsecase{ur}
-//	}
-//上記で構造体（表データ）にした「IUserUsecase」を下で実装。
-// return &userUsecase{ur}の返り値の「userUsecase」型が、「IUserUsecase」の「interface」を満たすには、
-// 「interface」で定義されている全てのメソッドを実装する必要がある。（今回の場合は、「SignUp」と「Login」メソッド）
-// 以下の処理で、「SignUp」と「Login」メソッドの処理を実装していく
 
-
-
+// 「SignUp」は、ユーザーの新規登録を行うUsecaseのメソッド。
+// 「uu」はレシーバー名、「*userUsecase」はレシーバーのデータ型（ポインタ型）。
+// 「user」は引数名、「model.User」は引数のデータ型。
+// 戻り値は「model.UserResponse」と「error」の2つ。
 func (uu *userUsecase) SignUp(user model.User) (model.UserResponse, error) {
-	hash, err := bcrypt.GenerateFromPassword([]byte(user.Password), 10)
-	if err != nil {
-		return model.UserResponse{}, err
-	}
-	newUser := model.User{Email: user.Email, Password: string(hash)}
-	if err := uu.ur.CreateUser(&newUser); err != nil {
-		return model.UserResponse{}, err
-	}
-	resUser := model.UserResponse {
-		ID: 		newUser.ID,
-		Email:  newUser.Email,
-	}
-	return resUser, nil
+
+    // 「bcrypt.GenerateFromPassword」でパスワードをハッシュ化する。
+    // 「user.Password」は入力されたパスワード。
+    // 「[]byte」でstring型のパスワードを[]byte型に変換する。
+		// 「10」はbcryptのコスト係数で、ハッシュ化処理の計算負荷を指定する。
+		// コスト係数を1増やすと計算量は約2倍になり、総当たり攻撃への耐性が高まる。
+		// ただし、コスト係数が高いほどユーザー登録・ログイン処理の時間も増える。
+		// 「hash」は生成されたハッシュ値、「err」はエラーを格納する変数。
+    hash, err := bcrypt.GenerateFromPassword([]byte(user.Password), 10)
+
+    // ハッシュ化でエラーが発生した場合は、終了する処理。
+    // 「model.UserResponse{}」は空のUserResponse構造体の値。
+    // 「err」は発生したエラーを返す。（つまり、エラーの場合はエラーのみを返す）
+    if err != nil {
+        return model.UserResponse{}, err
+    }
+
+    // DBに登録するためのmodel.User型の構造体の値を生成する。
+    // Emailには入力されたメールアドレスを設定する。
+    // Passwordにはハッシュ化したパスワードを設定する。
+    // 「string(hash)」で[]byte型をstring型に変換する。
+    newUser := model.User{
+        Email:    user.Email,
+        Password: string(hash),
+    }
+
+    // RepositoryのCreateUserメソッドを呼び出してDB登録を依頼する。
+    // 「uu.ur」はuserUsecaseが保持しているRepository。
+    // 「&newUser」で構造体へのポインタを渡す。
+    // DB登録に失敗した場合は空のUserResponseとエラーを返す。
+    if err := uu.ur.CreateUser(&newUser); err != nil {
+        return model.UserResponse{}, err
+    }
+
+    // Controllerに返すmodel.UserResponse型の構造体の値を生成する。
+    // DB登録後のIDとEmailを設定する。
+    // Passwordはレスポンスに含めない。
+    resUser := model.UserResponse{
+        ID:    newUser.ID,
+        Email: newUser.Email,
+    }
+
+    // 登録したユーザー情報を呼び出し元（user_repository.go）へ返す。
+    // 「nil」はエラーが発生していないことを表す。
+    return resUser, nil
 }
+
 
 func (uu *userUsecase) Login(user model.User) (string, error) {
 	storedUser := model.User{}
