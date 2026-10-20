@@ -26,46 +26,46 @@ import (
 // 「SignUp」：ユーザーを新規登録するメソッド作成。「user」は引数名、「model.User」は引数（入力情報）、戻り値（出力値）は「model.UserResponse, error」の2つ
 // 「Login」：ユーザーをログインさせるメソッドを作成
 type IUserUsecase interface {
-	SignUp(user model.User) (model.UserResponse, error)
-	Login(user model.User) (string, error)
+  SignUp(user model.User) (model.UserResponse, error)
+  Login(user model.User) (string, error)
 }
 
 // 「userUsecase」は新しく定義する型の名前。
 // 「struct」は複数のフィールドをまとめる構造体。「ur」はその構造体が持つフィールド名。
 // 「repository」はパッケージ名、「IUserRepository」は「repository」はパッケージ内の「user_repository.go」で定義された型の名前
 type userUsecase struct {
-	ur repository.IUserRepository
+  ur repository.IUserRepository
 }
 
-	// 「repository」パッケージで定義されたインターフェースを通じて、Repositoryの実装を「usecase」パッケージに渡す依存性の注入（DI：Dependency Injection）を行う。
-	// 「NewUserUsecase」は、外部からRepositoryの実装を受け取り、userUsecase構造体を生成するコンストラクター関数。
-	// 「ur」は引数名、「repository.IUserRepository」は引数。引数のデータ型はインターフェース型。
-	// 「IUserUsecase」は戻り値のデータ型（インターフェース型）。
-	// 「&userUsecase{ur}」で構造体を生成し、受け取ったRepositoryをurフィールドに格納する。
-	// 「&」で構造体のポインタを取得し、「IUserUsecase」型として呼び出し元（user_repository.go）に返す。
+  // 「repository」パッケージで定義されたインターフェースを通じて、Repositoryの実装を「usecase」パッケージに渡す依存性の注入（DI：Dependency Injection）を行う。
+  // 「NewUserUsecase」は、外部からRepositoryの実装を受け取り、userUsecase構造体を生成するコンストラクター関数。
+  // 「ur」は引数名、「repository.IUserRepository」は引数。引数のデータ型はインターフェース型。
+  // 「IUserUsecase」は戻り値のデータ型（インターフェース型）。
+  // 「&userUsecase{ur}」で構造体を生成し、受け取ったRepositoryをurフィールドに格納する。
+  // 「&」で構造体のポインタを取得し、「IUserUsecase」型として呼び出し元（user_repository.go）に返す。
 
-	/* 下記はurというフィールドを持つ構造体型を定義
-	type userUsecase struct {
-	ur repository.IUserRepository
-	}
-	return &userUsecase{ur}はその構造体を生成する処理
+  /* 下記はurというフィールドを持つ構造体型を定義
+  type userUsecase struct {
+  ur repository.IUserRepository
+  }
+  return &userUsecase{ur}はその構造体を生成する処理
 ここで構造体を生成する目的は、主に次の3つです。
 1. Repositoryの実装を保持するため
 2. SignUp・LoginメソッドからRepositoryを利用できるようにするため
 3. 生成したUsecaseをControllerなどに渡すため
-	*/
-	func NewUserUsecase(ur repository.IUserRepository) IUserUsecase {
-		return &userUsecase{ur}
-	}
+  */
+  func NewUserUsecase(ur repository.IUserRepository) IUserUsecase {
+    return &userUsecase{ur}
+  }
 
-/* ーーーーーーーーーーーーーーーーーーーーーーーーーー
-以下は、具体的には、次の5つの処理を実行している。
+/* -------------------------------------------------
+「SignUp」メソッドです具体的に、次の5つの処理を実行している。
 1. パスワードをハッシュ化する。
 2. エラーが発生していないか確認する。
 3. 登録用のUser構造体を生成する。
 4. Repositoryを呼び出してDBに保存する。
 5. 登録したユーザーのID・Emailを返す。
-ーーーーーーーーーーーーーーーーーーーーーーーーーー */
+------------------------------------------------- */
 // 「SignUp」は、ユーザーの新規登録を行うUsecaseのメソッド。
 // 「uu」はレシーバー名、「*userUsecase」はレシーバーのデータ型（ポインタ型）。
 // 「user」は引数名、「model.User」は引数のデータ型。
@@ -75,10 +75,10 @@ func (uu *userUsecase) SignUp(user model.User) (model.UserResponse, error) {
     // 「bcrypt.GenerateFromPassword」でパスワードをハッシュ化する。
     // 「user.Password」は入力されたパスワード。
     // 「[]byte」でstring型のパスワードを[]byte型に変換する。
-		// 「10」はbcryptのコスト係数で、ハッシュ化処理の計算負荷を指定する。
-		// コスト係数を1増やすと計算量は約2倍になり、総当たり攻撃への耐性が高まる。
-		// ただし、コスト係数が高いほどユーザー登録・ログイン処理の時間も増える。
-		// 「hash」は生成されたハッシュ値、「err」はエラーを格納する変数。
+    // 「10」はbcryptのコスト係数で、ハッシュ化処理の計算負荷を指定する。
+    // コスト係数を1増やすと計算量は約2倍になり、総当たり攻撃への耐性が高まる。
+    // ただし、コスト係数が高いほどユーザー登録・ログイン処理の時間も増える。
+    // 「hash」は生成されたハッシュ値、「err」はエラーを格納する変数。
     hash, err := bcrypt.GenerateFromPassword([]byte(user.Password), 10)
 
     // ハッシュ化でエラーが発生した場合は、終了する処理。
@@ -118,36 +118,78 @@ func (uu *userUsecase) SignUp(user model.User) (model.UserResponse, error) {
     return resUser, nil
 }
 
-/* ーーーーーーーーーーーーーーーーーーーーーーーーーー
-以下の処理は、大きく6段階に分けられる。
+
+/* -------------------------------------------------
+「Login」処理は、大きく6段階に分けて処理をしている。
 1. DBから取得したユーザー情報を格納する構造体を生成する。
 2. Repositoryを呼び出し、メールアドレスでユーザーを検索する。
 3. 入力されたパスワードとDBのハッシュ値を照合する。
 4. 認証に成功したユーザーのJWTトークンを生成する。
 5. JWTに秘密鍵で署名する。
 6. 署名済みJWT文字列を呼び出し元に返す。
-ーーーーーーーーーーーーーーーーーーーーーーーーーー */
+------------------------------------------------- */
 
 // 「Login」は、ユーザーのログイン認証を行うUsecaseのメソッド。
 // 「uu」はレシーバー名、「*userUsecase」はレシーバーのデータ型（ポインタ型）。
 // 「user」は引数名、「model.User」は引数のデータ型。
 // 戻り値は「string」（JWTトークン）と「error」（エラー情報）の2つ。
 func (uu *userUsecase) Login(user model.User) (string, error) {
-	storedUser := model.User{}
-	if err := uu.ur.GetUserByEmail(&storedUser, user.Email); err != nil {
-		return "", err
-	}
-	err := bcrypt.CompareHashAndPassword([]byte(storedUser.Password), []byte(user.Password))
-	if err != nil {
-		return "", err
-	}
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"user_id": storedUser.ID,
-		"exp":     time.Now().Add(time.Hour * 12).Unix(),
-	})
-	tokenString, err := token.SignedString([]byte(os.Getenv("SECRET")))
-	if err != nil {
-			return "", err
-	}
-	return tokenString, nil
+
+    // 「model.User{}」で空のUser構造体を生成する。
+    // 「storedUser」はDBから取得したユーザー情報を格納する変数。
+    storedUser := model.User{}
+
+    // RepositoryのGetUserByEmailメソッドを呼び出す。
+    // 「uu.ur」はuserUsecaseが保持しているRepository。
+    // 「&storedUser」で構造体へのポインタを渡す。
+    // 「user.Email」を検索条件としてDBからユーザー情報を取得する。
+    // エラーが発生した場合は空文字列とエラーを返して終了する。
+    if err := uu.ur.GetUserByEmail(&storedUser, user.Email); err != nil {
+        return "", err
+    }
+
+    // 「bcrypt.CompareHashAndPassword」でパスワードを照合する。
+    // 「storedUser.Password」はDBに保存されたbcryptハッシュ値。
+    // 「user.Password」はログイン時に入力されたパスワード。
+    // 「[]byte」でstring型を[]byte型に変換する。
+    // パスワードが一致すればerrはnilになる。
+    err := bcrypt.CompareHashAndPassword(
+        []byte(storedUser.Password),
+        []byte(user.Password),
+    )
+
+    // パスワードが一致しない場合などはエラーを返して終了する。
+    if err != nil {
+        return "", err
+    }
+
+    // 「jwt.NewWithClaims」でJWTオブジェクトを生成する。
+    // 「jwt.SigningMethodHS256」はHMAC-SHA256署名方式を指定する。
+    // 「jwt.MapClaims」でJWTに格納する情報を設定する。
+    // 「user_id」にはDBから取得したユーザーIDを設定する。
+    // 「exp」には現在時刻から12時間後の有効期限を設定する。
+    // 「Unix()」で時刻をUnix時刻（秒単位）に変換する。
+    token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+        "user_id": storedUser.ID,
+        "exp":     time.Now().Add(time.Hour * 12).Unix(),
+    })
+
+    // 「os.Getenv("SECRET")」で環境変数SECRETから秘密鍵を取得する。
+    // 「[]byte」で秘密鍵をバイト列に変換する。
+    // 「SignedString」でJWTに秘密鍵を使って署名する。
+    // 「tokenString」は署名済みJWT文字列。
+    // 「err」は署名処理のエラーを格納する変数。
+    tokenString, err := token.SignedString(
+        []byte(os.Getenv("SECRET")),
+    )
+
+    // JWTの署名処理でエラーが発生した場合は処理を終了する。
+    if err != nil {
+        return "", err
+    }
+
+    // 認証に成功したため、署名済みJWT文字列を返す。
+    // 「nil」はエラーが発生していないことを表す。
+    return tokenString, nil
 }
+
