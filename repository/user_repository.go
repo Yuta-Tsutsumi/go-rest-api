@@ -1,24 +1,45 @@
 /*
-主な役割 : DB内のデータの保存・取得・更新・削除
-考えること : DBにどうアクセスするか
-DBへの直接アクセスを行う
-ユーザー情報をDBに保存
-repositoryパッケージはメソッドの定義は行うが、「interface」では具体的な処理は書かない・
-具体的な処理は「usrcase」に任せる
+Repository層の主な役割：DB内のデータの保存・取得・更新・削除。
+考えること：DBにどのようにアクセスし、データを操作するか。
+
+Repository層では、インターフェースと具体的な実装を分離する。
+① インターフェース（IUserRepository）
+・DB操作に必要なメソッドの仕様を定義する。
+・メソッド名、引数、戻り値の型を定義する。
+・具体的なDB操作の処理内容は記載しない。
+
+② Repositoryの具体的な実装
+・IUserRepositoryで定義したメソッドを実装する。
+・GORMなどを使用してDBへのアクセスを行う。
+・ユーザー情報の検索や保存などを実行する。
+
+③ Usecaseとの関係
+・Usecaseはユーザー登録やログインなどの業務処理を担当する。
+・DB操作が必要な場合、IUserRepositoryのメソッドを呼び出す。
+・実際のDB操作はRepositoryの具体的な実装が担当する。
+・これにより、UsecaseはDB操作の実装方法に直接依存しない。
 */
 
 package repository
 
 import "go-rest-api/model"
 
-// インターフェースとは、ある型がどのようなメソッドを持っている必要があるかを定義する仕組み
-// 「interface」はインターフェイズ型を定義するために使用
-// 「IUserRepository」の先頭の文字列が「I」から始まるのはインターフェイスを定義
-// 「GetUserByEmail」、「CreateUser」の2つのメソットを定義
-// 「user *model.User」（第一引数）でユーザーオブジェクトのポインタを受け取れるようにしている
-// 「email string」（第二引数）で検索したいeメールを文字列で受け取れるようにする
-// 返り値は「error」インターフェース型でを設定
+// 「interface」はインターフェース型を定義するキーワード。（あらかじめGoで決められた文字列）
+// 「interface」とは、ある型が持つ必要のあるメソッドの仕様を定義したデータ型。
+// 「IUserRepository」はインターフェースの型名。 先頭の「I」はインターフェースをだとわかるように命名（Go言語の必須ルールではない）
+//
+// 「GetUserByEmail」はメールアドレスからユーザー情報を取得するメソッド。
+// 第1引数「user *model.User」は、User構造体へのポインタを受け取る。
+// 第2引数「email string」は、検索するメールアドレスを文字列型で受け取る。
+// 検索結果は第1引数のポインタを通じて格納する設計。
+// 戻り値「error」は検索処理のエラー情報。
+//
+// 「CreateUser」はユーザー情報をDBに登録するメソッド。
+// 引数「user *model.User」は登録するUser構造体へのポインタ。
+// 戻り値「error」は登録処理のエラー情報。
+//
+// 「error」はGo標準で定義されているインターフェース型。処理成功時はnil、失敗時はエラー値を返す。
 type IUserRepository interface {
-	GetUserByEmail(user *model.User, email string) error
-	CreateUser(user *model.User) error
+    GetUserByEmail(user *model.User, email string) error
+    CreateUser(user *model.User) error
 }
