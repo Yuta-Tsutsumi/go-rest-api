@@ -58,7 +58,14 @@ type userUsecase struct {
 		return &userUsecase{ur}
 	}
 
-
+/* -------------------------------------------------
+「SignUp」メソッドです具体的に、次の5つの処理を実行している。
+1. パスワードをハッシュ化する。
+2. エラーが発生していないか確認する。
+3. 登録用のUser構造体を生成する。
+4. Repositoryを呼び出してDBに保存する。
+5. 登録したユーザーのID・Emailを返す。
+------------------------------------------------- */
 // 「SignUp」は、ユーザーの新規登録を行うUsecaseのメソッド。
 // 「uu」はレシーバー名、「*userUsecase」はレシーバーのデータ型（ポインタ型）。
 // 「user」は引数名、「model.User」は引数のデータ型。
@@ -112,22 +119,76 @@ func (uu *userUsecase) SignUp(user model.User) (model.UserResponse, error) {
 }
 
 
+/* -------------------------------------------------
+「Login」処理は、大きく6段階に分けて処理をしている。
+1. DBから取得したユーザー情報を格納する構造体を生成する。
+2. Repositoryを呼び出し、メールアドレスでユーザーを検索する。
+3. 入力されたパスワードとDBのハッシュ値を照合する。
+4. 認証に成功したユーザーのJWTトークンを生成する。
+5. JWTに秘密鍵で署名する。
+6. 署名済みJWT文字列を呼び出し元に返す。
+------------------------------------------------- */
+
+// 「Login」は、ユーザーのログイン認証を行うUsecaseのメソッド。
+// 「uu」はレシーバー名、「*userUsecase」はレシーバーのデータ型（ポインタ型）。
+// 「user」は引数名、「model.User」は引数のデータ型。
+// 戻り値は「string」（JWTトークン）と「error」（エラー情報）の2つ。
 func (uu *userUsecase) Login(user model.User) (string, error) {
-	storedUser := model.User{}
-	if err := uu.ur.GetUserByEmail(&storedUser, user.Email); err != nil {
-		return "", err
-	}
-	err := bcrypt.CompareHashAndPassword([]byte(storedUser.Password), []byte(user.Password))
-	if err != nil {
-		return "", err
-	}
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"user_id": storedUser.ID,
-		"exp":     time.Now().Add(time.Hour * 12).Unix(),
-	})
-	tokenString, err := token.SignedString([]byte(os.Getenv("SECRET")))
-	if err != nil {
-			return "", err
-	}
-	return tokenString, nil
+
+    // 「model.User{}」で空のUser構造体を生成する。
+    // 「storedUser」はDBから取得したユーザー情報を格納する変数。
+    storedUser := model.User{}
+
+    // RepositoryのGetUserByEmailメソッドを呼び出す。
+    // 「uu.ur」はuserUsecaseが保持しているRepository。
+    // 「&storedUser」で構造体へのポインタを渡す。
+    // 「user.Email」を検索条件としてDBからユーザー情報を取得する。
+    // エラーが発生した場合は空文字列とエラーを返して終了する。
+    if err := uu.ur.GetUserByEmail(&storedUser, user.Email); err != nil {
+        return "", err
+    }
+
+    // 「bcrypt.CompareHashAndPassword」でパスワードを照合する。
+    // 「storedUser.Password」はDBに保存されたbcryptハッシュ値。
+    // 「user.Password」はログイン時に入力されたパスワード。
+    // 「[]byte」でstring型を[]byte型に変換する。
+    // パスワードが一致すればerrはnilになる。
+    err := bcrypt.CompareHashAndPassword(
+        []byte(storedUser.Password),
+        []byte(user.Password),
+    )
+
+    // パスワードが一致しない場合などはエラーを返して終了する。
+    if err != nil {
+        return "", err
+    }
+
+    // 「jwt.NewWithClaims」でJWTオブジェクトを生成する。
+    // 「jwt.SigningMethodHS256」はHMAC-SHA256署名方式を指定する。
+    // 「jwt.MapClaims」でJWTに格納する情報を設定する。
+    // 「user_id」にはDBから取得したユーザーIDを設定する。
+    // 「exp」には現在時刻から12時間後の有効期限を設定する。
+    // 「Unix()」で時刻をUnix時刻（秒単位）に変換する。
+    token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+        "user_id": storedUser.ID,
+        "exp":     time.Now().Add(time.Hour * 12).Unix(),
+    })
+
+    // 「os.Getenv("SECRET")」で環境変数SECRETから秘密鍵を取得する。
+    // 「[]byte」で秘密鍵をバイト列に変換する。
+    // 「SignedString」でJWTに秘密鍵を使って署名する。
+    // 「tokenString」は署名済みJWT文字列。
+    // 「err」は署名処理のエラーを格納する変数。
+    tokenString, err := token.SignedString(
+        []byte(os.Getenv("SECRET")),
+    )
+
+    // JWTの署名処理でエラーが発生した場合は処理を終了する。
+    if err != nil {
+        return "", err
+    }
+
+    // 認証に成功したため、署名済みJWT文字列を返す。
+    // 「nil」はエラーが発生していないことを表す。
+    return tokenString, nil
 }
