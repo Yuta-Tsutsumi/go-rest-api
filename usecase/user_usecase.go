@@ -118,7 +118,6 @@ func (uu *userUsecase) SignUp(user model.User) (model.UserResponse, error) {
     return resUser, nil
 }
 
-
 /* -------------------------------------------------
 「Login」処理は、大きく6段階に分けて処理をしている。
 1. DBから取得したユーザー情報を格納する構造体を生成する。
