@@ -22,7 +22,11 @@ Repository層では、インターフェースと具体的な実装を分離す�
 
 package repository
 
-import "go-rest-api/model"
+import (
+	"go-rest-api/model"
+
+	"gorm.io/gorm"
+)
 
 // 「interface」はインターフェース型を定義するキーワード（あらかじめGoで決められた文字列）
 // 「interface」とは、ある型が持つ必要のあるメソッドの仕様を定義したデータ型。
@@ -42,4 +46,8 @@ import "go-rest-api/model"
 type IUserRepository interface {
     GetUserByEmail(user *model.User, email string) error
     CreateUser(user *model.User) error
+}
+
+type userRepository struct {
+    db *gorm.DB
 }
