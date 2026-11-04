@@ -43,7 +43,7 @@ type Task struct {
     CreatedAt time.Time `json:"created_at"`
     UpdatedAt time.Time `json:"updated_at"`
     User User `json:"user" gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE"`
-    UserID uint `json:"user_id" gorm:"not null"`
+    UserId uint `json:"user_id" gorm:"not null"`
 }
 
 // TaskResponseは、クライアントに返すタスク情報を定義する構造体。
