@@ -1,3 +1,4 @@
+
 # 環境変数
 .env
 .env.*
@@ -12,12 +13,9 @@
 *.exe
 *.test
 *.out
-
-# ログ
-*.log
-
-# PostgreSQLのローカルデータ
-/postgres_data/
+coverage.out
 
 # IDE
+.vscode/
 .idea/
+.DS_Store
