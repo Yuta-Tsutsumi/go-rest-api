@@ -14,6 +14,7 @@ package usecase
 import (
 	"go-rest-api/model"
 	"go-rest-api/repository"
+	"go-rest-api/validator"
 	"os"
 	"time"
 
@@ -35,6 +36,7 @@ type IUserUsecase interface {
 // 「repository」はパッケージ名、「IUserRepository」は「repository」はパッケージ内の「user_repository.go」で定義された型の名前
 type userUsecase struct {
   ur repository.IUserRepository
+  uv validator.IUserValidator
 }
 
   // 「repository」パッケージで定義されたインターフェースを通じて、Repositoryの実装を「usecase」パッケージに渡す依存性の注入（DI：Dependency Injection）を行う。
@@ -54,8 +56,8 @@ type userUsecase struct {
 2. SignUp・LoginメソッドからRepositoryを利用できるようにするため
 3. 生成したUsecaseをControllerなどに渡すため
   */
-  func NewUserUsecase(ur repository.IUserRepository) IUserUsecase {
-    return &userUsecase{ur}
+  func NewUserUsecase(ur repository.IUserRepository, uv validator.IUserValidator) IUserUsecase {
+    return &userUsecase{ur, uv}
   }
 
 /* -------------------------------------------------
@@ -71,6 +73,9 @@ type userUsecase struct {
 // 「user」は引数名、「model.User」は引数のデータ型。
 // 戻り値は「model.UserResponse」と「error」の2つ。
 func (uu *userUsecase) SignUp(user model.User) (model.UserResponse, error) {
+    if err := uu.uv.UserValidate(user); err != nil {
+        return model.UserResponse{}, err
+    }
 
     // 「bcrypt.GenerateFromPassword」でパスワードをハッシュ化する。
     // 「user.Password」は入力されたパスワード。
@@ -132,7 +137,9 @@ func (uu *userUsecase) SignUp(user model.User) (model.UserResponse, error) {
 // 「user」は引数名、「model.User」は引数のデータ型。
 // 戻り値は「string」（JWTトークン）と「error」（エラー情報）の2つ。
 func (uu *userUsecase) Login(user model.User) (string, error) {
-
+	if err := uu.uv.UserValidate(user); err != nil {
+		return "", err
+	}
     // 「model.User{}」で空のUser構造体を生成する。
     // 「storedUser」はDBから取得したユーザー情報を格納する変数。
     storedUser := model.User{}
