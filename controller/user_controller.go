@@ -15,6 +15,7 @@ type IUserController interface {
 	SignUp(C echo.Context) error
 	LogIn(C echo.Context) error
 	LogOut(C echo.Context) error
+	CsrfToken(c echo.Context) error
 }
 
 type userController struct {
@@ -54,13 +55,14 @@ func (uc *userController) LogIn(c echo.Context) error {
 	cookie.Expires = time.Now().Add(24 * time.Hour)
 	cookie.Path = "/"
 	cookie.Domain = os.Getenv("API_DOMAIN")
-	// cookie.Secure = true
+
+	cookie.Secure = true    // ポストマンで動作確認する問いはコメントアウトにすること
+
 	cookie.HttpOnly = true
 	cookie.SameSite = http.SameSiteNoneMode
 	c.SetCookie(cookie)
 	return c.NoContent(http.StatusOK)
 }
-
 
 func (uc *userController) LogOut(c echo.Context) error {
 	cookie := new(http.Cookie)
@@ -69,9 +71,18 @@ func (uc *userController) LogOut(c echo.Context) error {
 	cookie.Expires = time.Now()
 	cookie.Path = "/"
 	cookie.Domain = os.Getenv("API_DOMAIN")
-	// cookie.Secure = true    // ポストマンで動作確認する問いはコメントアウトにすること
+
+	cookie.Secure = true    // ポストマンで動作確認する問いはコメントアウトにすること
+
 	cookie.HttpOnly = true
 	cookie.SameSite = http.SameSiteNoneMode
 	c.SetCookie(cookie)
 	return c.NoContent(http.StatusOK)
+}
+
+func (uc *userController) CsrfToken(c echo.Context) error {
+	token := c.Get("csrf").(string)
+	return c.JSON(http.StatusOK, echo.Map{
+		"csrf_token": token,
+	})
 }
